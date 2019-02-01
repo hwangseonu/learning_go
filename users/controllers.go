@@ -1,6 +1,7 @@
 package users
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -40,6 +41,7 @@ func (c UserController) signUp(res http.ResponseWriter, req *http.Request) {
 	body, err := ioutil.ReadAll(req.Body)
 
 	if err != nil {
+		*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 400))
 		res.WriteHeader(400)
 		res.Write([]byte(`{}`))
 		return
@@ -47,11 +49,34 @@ func (c UserController) signUp(res http.ResponseWriter, req *http.Request) {
 
 	err = json.Unmarshal(body, &request)
 	if err != nil {
+		*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 400))
 		res.WriteHeader(400)
 		res.Write([]byte(`{}`))
 		return
 	}
 
+	err = User{
+		request.Username,
+		request.Password,
+		request.Nickname,
+		request.Email,
+	}.Save()
+
+	if err != nil {
+		if err.Error() == "user already exists" {
+			*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 409))
+			res.WriteHeader(409)
+			res.Write([]byte(`{}`))
+			return
+		} else {
+			*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 500))
+			res.WriteHeader(500)
+			res.Write([]byte(`{"message": `+err.Error()+`}`))
+			return
+		}
+	}
+
+	*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 201))
 	res.WriteHeader(201)
 	res.Write([]byte(`{}`))
 	return

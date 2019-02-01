@@ -34,7 +34,7 @@ func ChainAfterMiddlewares(middlewares ...Middleware) Middleware {
 
 func LoggerMiddleware(next http.Handler) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
-		log.Printf("[%s] %s", req.Method, req.URL.Path)
+		log.Printf("[%s] %s %d", req.Method, req.URL.Path, req.Context().Value("statusCode"))
 		next.ServeHTTP(res, req)
 	}
 }
