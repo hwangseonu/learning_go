@@ -9,7 +9,7 @@ import (
 const port = ":5000"
 
 func main() {
-	before := common.ChainBeforeMiddlewares(common.LoggerMiddleware)
+	before := common.ChainBeforeMiddlewares()
 	after := common.ChainAfterMiddlewares(common.LoggerMiddleware)
 
 	http.HandleFunc("/auth", before(after(new(users.AuthController))))
