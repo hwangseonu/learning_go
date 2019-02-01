@@ -21,7 +21,49 @@ func (c *AuthController) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 }
 
 func (c AuthController) signIn(res http.ResponseWriter, req *http.Request) {
-	//TODO
+	var request SignInRequest
+	body, err := ioutil.ReadAll(req.Body)
+
+	if err != nil {
+		*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 400))
+		res.WriteHeader(400)
+		res.Write([]byte(`{}`))
+		return
+	}
+
+	err = json.Unmarshal(body, &request)
+	if err != nil {
+		*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 400))
+		res.WriteHeader(400)
+		res.Write([]byte(`{}`))
+		return
+	}
+
+	user := new(User)
+	err = user.FindByUsername(request.Username)
+	if err != nil {
+		*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 404))
+		res.WriteHeader(404)
+		res.Write([]byte(`{}`))
+		return
+	}
+
+	if user.Password != request.Password {
+		*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 401))
+		res.WriteHeader(401)
+		res.Write([]byte(`{}`))
+		return
+	}
+	access, _ := GenerateToken("access", user.Username)
+	refresh, _ := GenerateToken("refresh", user.Username)
+	response := SignInResponse{access, refresh}
+
+	b, _ := json.MarshalIndent(response, "", "  ")
+
+	*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 200))
+	res.WriteHeader(200)
+	res.Write(b)
+	return
 }
 
 type UserController struct {
