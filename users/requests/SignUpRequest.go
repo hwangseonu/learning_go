@@ -1,9 +1,4 @@
-package users
-
-type SignInRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
+package requests
 
 type SignUpRequest struct {
 	Username string `json:"username"`

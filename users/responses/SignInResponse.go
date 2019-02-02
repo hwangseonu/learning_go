@@ -1,4 +1,4 @@
-package users
+package responses
 
 type SignInResponse struct {
 	Access  string `json:"access"`

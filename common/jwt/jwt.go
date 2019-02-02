@@ -1,56 +1,14 @@
-package users
+package jwt
 
 import (
 	"errors"
-	"fmt"
 	"github.com/dgrijalva/jwt-go"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/hwangseonu/goBackend/common/models"
+	"net/http"
 	"os"
+	"strings"
 	"time"
 )
-
-var session *mgo.Session
-
-func init() {
-	s, err := mgo.Dial("mongodb://localhost:27017")
-	if err != nil {
-		panic(err)
-	}
-	session = s
-}
-
-type User struct {
-	Username string
-	Password string
-	Nickname string
-	Email string
-}
-
-func (u *User) FindByUsername(username string) error {
-	s := session.Clone()
-	defer s.Close()
-	var result User
-	err := s.DB("backend").C("users").Find(bson.M{"username": username}).One(&result)
-	if err != nil {
-		return err
-	}
-	*u = result
-	return nil
-}
-
-func (u User) Save() error {
-	s := session.Clone()
-	defer s.Close()
-	err := (&User{}).FindByUsername(u.Username)
-
-	if err == nil {
-		return fmt.Errorf("user already exists")
-	}
-
-	err = s.DB("backend").C("users").Insert(u)
-	return err
-}
 
 type CustomClaims struct {
 	jwt.StandardClaims
@@ -63,7 +21,7 @@ func (c CustomClaims) Valid() error {
 	if err := c.StandardClaims.Valid(); err != nil {
 		return err
 	}
-	user := new(User)
+	user := new(models.User)
 	err := user.FindByUsername(c.Identity)
 
 	if err != nil {
@@ -93,4 +51,24 @@ func GenerateToken(t, username string) (string, error) {
 		NotBefore: time.Now().Unix(),
 	}
 	return jwt.NewWithClaims(jwt.SigningMethodHS512, CustomClaims{claims, username}).SignedString([]byte(secret))
+}
+
+func AuthRequire(res http.ResponseWriter, req *http.Request, subject string) *CustomClaims {
+	tokenString := strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer ")
+	token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (i interface{}, e error) {
+		return []byte(os.Getenv("JWT_SECRET")), nil
+	})
+	if err != nil {
+		res.WriteHeader(422)
+		res.Write([]byte(`{"message": "jwt error `+err.Error()+`"}`))
+		return nil
+	}
+	claims := token.Claims.(*CustomClaims)
+
+	if claims.Subject != subject {
+		res.WriteHeader(422)
+		res.Write([]byte(`{"message": "subject required `+subject+`"}`))
+		return nil
+	}
+	return claims
 }

@@ -1,19 +1,19 @@
 package main
 
 import (
-	"github.com/hwangseonu/goBackend/common"
-	"github.com/hwangseonu/goBackend/users"
+	"github.com/hwangseonu/goBackend/common/middlewares"
+	"github.com/hwangseonu/goBackend/users/controllers"
 	"net/http"
 )
 
 const port = ":5000"
 
 func main() {
-	before := common.ChainBeforeMiddlewares()
-	after := common.ChainAfterMiddlewares(common.LoggerMiddleware)
+	before := middlewares.ChainBeforeMiddlewares()
+	after := middlewares.ChainAfterMiddlewares(middlewares.LoggerMiddleware)
 
-	http.HandleFunc("/auth", before(after(new(users.AuthController))))
-	http.Handle("/users", before(after(new(users.UserController))))
+	http.HandleFunc("/auth", before(after(new(controllers.AuthController))))
+	http.Handle("/users", before(after(new(controllers.UserController))))
 
 	println("server is running on port " + port)
 	err := http.ListenAndServe(port, nil)
