@@ -1,0 +1,4 @@
+GET http://localhost:5000/auth/refresh
+Authorization: Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NTE1MTc0MTYsImlhdCI6MTU0OTA5ODIxNiwibmJmIjoxNTQ5MDk4MjE2LCJzdWIiOiJyZWZyZXNoIiwiaWRlbnRpdHkiOiJ0ZXN0In0.AGXTLcpUy8MtqI53wvZ4XtRvUr13gNhzVudIC7nmanIDw-4nu7R86dva8PN-hn_P6ThhlQ5wfwVGfnD72Jl4HQ
+
+###

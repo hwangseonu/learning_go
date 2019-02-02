@@ -67,6 +67,13 @@ func AuthRequire(res http.ResponseWriter, req *http.Request, subject string) *Cu
 	}
 	claims := token.Claims.(*CustomClaims)
 
+	if claims.Valid() != nil {
+		*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 422))
+		res.WriteHeader(422)
+		res.Write([]byte(`{"message": "jwt is not valid"}`))
+		return nil
+	}
+
 	if claims.Subject != subject {
 		*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 422))
 		res.WriteHeader(422)

@@ -13,6 +13,7 @@ func main() {
 	after := middlewares.ChainAfterMiddlewares(middlewares.LoggerMiddleware)
 
 	http.HandleFunc("/auth", before(after(new(controllers.AuthController))))
+	http.HandleFunc("/auth/refresh", before(after(new(controllers.AuthController))))
 	http.Handle("/users", before(after(new(controllers.UserController))))
 
 	println("server is running on port " + port)

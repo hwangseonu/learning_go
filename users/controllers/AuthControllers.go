@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"regexp"
+	"time"
 )
 
 type AuthController struct {
@@ -21,6 +22,8 @@ func (c *AuthController) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 
 	if regexp.MustCompile("^/auth$").Match(path) && req.Method == "POST" {
 		c.signIn(res, req)
+	} else if regexp.MustCompile("^/auth/refresh$").Match(path) && req.Method == "GET" {
+		c.refresh(res, req)
 	}
 }
 
@@ -60,7 +63,28 @@ func (c AuthController) signIn(res http.ResponseWriter, req *http.Request) {
 	}
 	access, _ := jwt.GenerateToken("access", user.Username)
 	refresh, _ := jwt.GenerateToken("refresh", user.Username)
-	response := responses.SignInResponse{access, refresh}
+	response := responses.SignInResponse{Access: access, Refresh: refresh}
+
+	b, _ := json.MarshalIndent(response, "", "  ")
+
+	*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 200))
+	res.WriteHeader(200)
+	res.Write(b)
+	return
+}
+
+func (c AuthController) refresh(res http.ResponseWriter, req *http.Request) {
+	claims := jwt.AuthRequire(res, req, "refresh")
+	if claims == nil {
+		return
+	}
+
+	access, _ := jwt.GenerateToken(claims.Identity, "access")
+	response := responses.SignInResponse{Access: access}
+
+	if time.Unix(claims.ExpiresAt, 0).Sub(time.Now()).Hours() <= 168 {
+		response.Refresh, _ = jwt.GenerateToken(claims.Identity, "refresh")
+	}
 
 	b, _ := json.MarshalIndent(response, "", "  ")
 

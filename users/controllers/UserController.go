@@ -79,12 +79,7 @@ func (c UserController) getUserData(res http.ResponseWriter, req *http.Request) 
 	}
 
 	user := new(models.User)
-	err := user.FindByUsername(claims.Identity)
-	if err != nil {
-		*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 404))
-		res.WriteHeader(404)
-		res.Write([]byte(`{}`))
-	}
+	user.FindByUsername(claims.Identity)
 
 	response := responses.GetUserResponse{Username: user.Username, Nickname: user.Nickname, Email: user.Email}
 	b, _ := json.MarshalIndent(response, "", "  ")
