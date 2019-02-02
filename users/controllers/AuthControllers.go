@@ -3,11 +3,11 @@ package controllers
 import (
 	"context"
 	"encoding/json"
+	"github.com/hwangseonu/goBackend/common/functions"
 	"github.com/hwangseonu/goBackend/common/jwt"
 	"github.com/hwangseonu/goBackend/common/models"
 	"github.com/hwangseonu/goBackend/users/requests"
 	"github.com/hwangseonu/goBackend/users/responses"
-	"io/ioutil"
 	"net/http"
 	"regexp"
 	"time"
@@ -29,36 +29,21 @@ func (c *AuthController) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 
 func (c AuthController) signIn(res http.ResponseWriter, req *http.Request) {
 	var request requests.SignInRequest
-	body, err := ioutil.ReadAll(req.Body)
+	err := functions.Request(res, req, &request)
 
 	if err != nil {
-		*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 400))
-		res.WriteHeader(400)
-		res.Write([]byte(`{}`))
-		return
-	}
-
-	err = json.Unmarshal(body, &request)
-	if err != nil {
-		*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 400))
-		res.WriteHeader(400)
-		res.Write([]byte(`{}`))
 		return
 	}
 
 	user := new(models.User)
 	err = user.FindByUsername(request.Username)
 	if err != nil {
-		*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 404))
-		res.WriteHeader(404)
-		res.Write([]byte(`{}`))
+		functions.Response(res, req, 404, []byte("{}"))
 		return
 	}
 
 	if user.Password != request.Password {
-		*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 401))
-		res.WriteHeader(401)
-		res.Write([]byte(`{}`))
+		functions.Response(res, req, 401, []byte("{}"))
 		return
 	}
 	access, _ := jwt.GenerateToken("access", user.Username)
@@ -67,9 +52,7 @@ func (c AuthController) signIn(res http.ResponseWriter, req *http.Request) {
 
 	b, _ := json.MarshalIndent(response, "", "  ")
 
-	*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 200))
-	res.WriteHeader(200)
-	res.Write(b)
+	functions.Response(res, req, 200, b)
 	return
 }
 

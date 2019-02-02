@@ -2,7 +2,8 @@ package main
 
 import (
 	"github.com/hwangseonu/goBackend/common/middlewares"
-	"github.com/hwangseonu/goBackend/users/controllers"
+	posts "github.com/hwangseonu/goBackend/posts/controllers"
+	users "github.com/hwangseonu/goBackend/users/controllers"
 	"net/http"
 )
 
@@ -12,9 +13,10 @@ func main() {
 	before := middlewares.ChainBeforeMiddlewares()
 	after := middlewares.ChainAfterMiddlewares(middlewares.LoggerMiddleware)
 
-	http.HandleFunc("/auth", before(after(new(controllers.AuthController))))
-	http.HandleFunc("/auth/refresh", before(after(new(controllers.AuthController))))
-	http.Handle("/users", before(after(new(controllers.UserController))))
+	http.HandleFunc("/auth", before(after(new(users.AuthController))))
+	http.HandleFunc("/auth/refresh", before(after(new(users.AuthController))))
+	http.HandleFunc("/users", before(after(new(users.UserController))))
+	http.Handle("/posts", before(after(new(posts.PostController))))
 
 	println("server is running on port " + port)
 	err := http.ListenAndServe(port, nil)

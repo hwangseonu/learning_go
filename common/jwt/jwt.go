@@ -1,9 +1,9 @@
 package jwt
 
 import (
-	"context"
 	"errors"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/hwangseonu/goBackend/common/functions"
 	"github.com/hwangseonu/goBackend/common/models"
 	"net/http"
 	"os"
@@ -56,28 +56,28 @@ func GenerateToken(t, username string) (string, error) {
 
 func AuthRequire(res http.ResponseWriter, req *http.Request, subject string) *CustomClaims {
 	tokenString := strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer ")
+
+	if tokenString == "" {
+		functions.Response(res, req, 401, []byte(`{}`))
+		return nil
+	}
+
 	token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (i interface{}, e error) {
 		return []byte(os.Getenv("JWT_SECRET")), nil
 	})
 	if err != nil {
-		*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 422))
-		res.WriteHeader(422)
-		res.Write([]byte(`{"message": "jwt error `+err.Error()+`"}`))
+		functions.Response(res, req, 422, []byte(`{"message": "jwt error `+err.Error()+`"}`))
 		return nil
 	}
 	claims := token.Claims.(*CustomClaims)
 
 	if claims.Valid() != nil {
-		*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 422))
-		res.WriteHeader(422)
-		res.Write([]byte(`{"message": "jwt is not valid"}`))
+		functions.Response(res, req, 422, []byte(`{"message": "jwt is not valid"}`))
 		return nil
 	}
 
 	if claims.Subject != subject {
-		*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 422))
-		res.WriteHeader(422)
-		res.Write([]byte(`{"message": "subject required `+subject+`"}`))
+		functions.Response(res, req, 422, []byte(`{"message": "subject required `+subject+`"}`))
 		return nil
 	}
 	return claims

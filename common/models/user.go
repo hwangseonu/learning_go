@@ -2,25 +2,15 @@ package models
 
 import (
 	"fmt"
-	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
-var session *mgo.Session
-
-func init() {
-	s, err := mgo.Dial("mongodb://localhost:27017")
-	if err != nil {
-		panic(err)
-	}
-	session = s
-}
-
 type User struct {
+	Id       bson.ObjectId `json:"id" bson:"_id"`
 	Username string
 	Password string
 	Nickname string
-	Email string
+	Email    string
 }
 
 func (u *User) FindByUsername(username string) error {

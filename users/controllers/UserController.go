@@ -3,11 +3,12 @@ package controllers
 import (
 	"context"
 	"encoding/json"
+	"github.com/hwangseonu/goBackend/common/functions"
 	"github.com/hwangseonu/goBackend/common/jwt"
 	"github.com/hwangseonu/goBackend/common/models"
 	"github.com/hwangseonu/goBackend/users/requests"
 	"github.com/hwangseonu/goBackend/users/responses"
-	"io/ioutil"
+	"gopkg.in/mgo.v2/bson"
 	"net/http"
 	"regexp"
 )
@@ -28,28 +29,18 @@ func (c *UserController) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 
 func (c UserController) signUp(res http.ResponseWriter, req *http.Request) {
 	var request requests.SignUpRequest
-	body, err := ioutil.ReadAll(req.Body)
+	err := functions.Request(res, req, &request)
 
 	if err != nil {
-		*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 400))
-		res.WriteHeader(400)
-		res.Write([]byte(`{}`))
-		return
-	}
-
-	err = json.Unmarshal(body, &request)
-	if err != nil {
-		*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 400))
-		res.WriteHeader(400)
-		res.Write([]byte(`{}`))
 		return
 	}
 
 	err = models.User{
-		request.Username,
-		request.Password,
-		request.Nickname,
-		request.Email,
+		Id: bson.NewObjectId(),
+		Username: request.Username,
+		Password: request.Password,
+		Nickname: request.Nickname,
+		Email:    request.Email,
 	}.Save()
 
 	if err != nil {
