@@ -29,6 +29,7 @@ func (c *PostController) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 		}
 		c.getPost(res, req, id)
 	}
+	functions.Response(res, req, 404, []byte(`{"message": "404 page not found"}`))
 }
 
 func (c PostController) createPost(res http.ResponseWriter, req *http.Request) {

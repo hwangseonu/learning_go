@@ -25,6 +25,7 @@ func (c *UserController) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	} else if regexp.MustCompile("^/users$").Match(path) && req.Method == "GET" {
 		c.getUserData(res, req)
 	}
+	functions.Response(res, req, 404, []byte(`{"message": "404 page not found"}`))
 }
 
 func (c UserController) signUp(res http.ResponseWriter, req *http.Request) {
@@ -45,21 +46,15 @@ func (c UserController) signUp(res http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		if err.Error() == "user already exists" {
-			*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 409))
-			res.WriteHeader(409)
-			res.Write([]byte(`{}`))
+			functions.Response(res, req, 409, []byte(`{"message": "user already exists"}`))
 			return
 		} else {
-			*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 500))
-			res.WriteHeader(500)
-			res.Write([]byte(`{"message": `+err.Error()+`}`))
+			functions.Response(res, req, 500, []byte(`{"message": `+err.Error()+`}`))
 			return
 		}
 	}
 
-	*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 201))
-	res.WriteHeader(201)
-	res.Write([]byte(`{}`))
+	functions.Response(res, req, 201, []byte(`{}`))
 	return
 }
 
