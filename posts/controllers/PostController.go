@@ -30,6 +30,13 @@ func (c *PostController) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 			return
 		}
 		c.getPost(res, req, id)
+	} else if regexp.MustCompile(`^/posts/\d+$`).Match(path) && req.Method == "DELETE" {
+		id, err := strconv.Atoi(strings.TrimPrefix(req.URL.Path, "/posts/"))
+		if err != nil {
+			functions.Response(res, req, 400, []byte(`{"message": "post is is integer"}`))
+			return
+		}
+		c.deletePost(res, req, id)
 	} else {
 		functions.Response(res, req, 404, []byte(`{"message": "404 page not found"}`))
 	}
@@ -89,4 +96,30 @@ func (c PostController) getPost(res http.ResponseWriter, req *http.Request, id i
 
 	b, _ := json.MarshalIndent(response, "", "  ")
 	functions.Response(res, req, 200, b)
+}
+
+func (c PostController) deletePost(res http.ResponseWriter, req *http.Request, id int) {
+	claims := jwt.AuthRequire(res, req, "access")
+	if claims == nil {
+		return
+	}
+	user := new(models.User)
+	user.FindByUsername(claims.Identity)
+
+	post := new(models.Post)
+	if err := post.FindById(id); err != nil {
+		functions.Response(res, req, 404, []byte(`{"message": "cannot find post by id"}`))
+		return
+	}
+
+	if post.Writer.Hex() != user.Id.Hex() {
+		functions.Response(res, req, 403, []byte(`{"message": "this post is not your own"}`))
+		return
+	}
+
+	if err := post.Delete(); err != nil {
+		functions.Response(res, req, 404, []byte(`{"message": "`+err.Error()+`"}`))
+		return
+	}
+	functions.Response(res, req, 200, []byte(`{}`))
 }

@@ -36,6 +36,14 @@ func (post *Post) FindById(id int) error {
 	return nil
 }
 
+func (post *Post) Delete() error {
+	s := session.Clone()
+	defer s.Close()
+
+	err := s.DB("backend").C("posts").RemoveId(post.Id)
+	return err
+}
+
 func (post *Post) Save() error {
 	s := session.Clone()
 	defer s.Close()

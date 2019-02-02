@@ -1,4 +1,4 @@
-GET http://localhost:5000/users
+DELETE http://localhost:5000/posts/3
 Authorization: Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NDkxMTk1OTUsImlhdCI6MTU0OTExNTk5NSwibmJmIjoxNTQ5MTE1OTk1LCJzdWIiOiJhY2Nlc3MiLCJpZGVudGl0eSI6InRlc3QxIn0._QFBiSVOh8fN94KeVUkwoafpqZYCVd7aLglOOMLQg6Fjy94f1EN_A7T7eNJ3GGKgywOKGnKI3BJGPePqEWMzCA
 
 ###
