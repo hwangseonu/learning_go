@@ -8,6 +8,8 @@ import (
 	"github.com/hwangseonu/goBackend/posts/requests"
 	"net/http"
 	"regexp"
+	"strconv"
+	"strings"
 )
 
 type PostController struct {
@@ -19,6 +21,13 @@ func (c *PostController) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 
 	if regexp.MustCompile("^/posts$").Match(path) && req.Method == "POST" {
 		c.createPost(res, req)
+	} else if regexp.MustCompile(`^/posts/\d+$`).Match(path) && req.Method == "GET" {
+		id, err := strconv.Atoi(strings.TrimPrefix(req.URL.Path, "/posts/"))
+		if err != nil {
+			functions.Response(res, req, 400, []byte(`{"message": "post is is integer"}`))
+			return
+		}
+		c.getPost(res, req, id)
 	}
 }
 
@@ -50,4 +59,8 @@ func (c PostController) createPost(res http.ResponseWriter, req *http.Request) {
 	b, _ := json.MarshalIndent(post, "", "  ")
 	functions.Response(res, req, 201, b)
 	return
+}
+
+func (c PostController) getPost(res http.ResponseWriter, req *http.Request, id int) {
+	functions.Response(res, req, 200, []byte(`{"message": "`+strconv.Itoa(id)+`"}`))
 }
