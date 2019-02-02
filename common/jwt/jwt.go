@@ -1,6 +1,7 @@
 package jwt
 
 import (
+	"context"
 	"errors"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/hwangseonu/goBackend/common/models"
@@ -59,6 +60,7 @@ func AuthRequire(res http.ResponseWriter, req *http.Request, subject string) *Cu
 		return []byte(os.Getenv("JWT_SECRET")), nil
 	})
 	if err != nil {
+		*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 422))
 		res.WriteHeader(422)
 		res.Write([]byte(`{"message": "jwt error `+err.Error()+`"}`))
 		return nil
@@ -66,6 +68,7 @@ func AuthRequire(res http.ResponseWriter, req *http.Request, subject string) *Cu
 	claims := token.Claims.(*CustomClaims)
 
 	if claims.Subject != subject {
+		*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 422))
 		res.WriteHeader(422)
 		res.Write([]byte(`{"message": "subject required `+subject+`"}`))
 		return nil

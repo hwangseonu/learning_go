@@ -6,6 +6,7 @@ import (
 	"github.com/hwangseonu/goBackend/common/jwt"
 	"github.com/hwangseonu/goBackend/common/models"
 	"github.com/hwangseonu/goBackend/users/requests"
+	"github.com/hwangseonu/goBackend/users/responses"
 	"io/ioutil"
 	"net/http"
 	"regexp"
@@ -76,7 +77,20 @@ func (c UserController) getUserData(res http.ResponseWriter, req *http.Request) 
 	if claims == nil {
 		return
 	}
+
+	user := new(models.User)
+	err := user.FindByUsername(claims.Identity)
+	if err != nil {
+		*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 404))
+		res.WriteHeader(404)
+		res.Write([]byte(`{}`))
+	}
+
+	response := responses.GetUserResponse{Username: user.Username, Nickname: user.Nickname, Email: user.Email}
+	b, _ := json.MarshalIndent(response, "", "  ")
+
+	*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 200))
 	res.WriteHeader(200)
-	res.Write([]byte(`{}`))
+	res.Write(b)
 	return
 }
