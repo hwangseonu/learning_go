@@ -23,6 +23,19 @@ func (post *Post) New(title, content string, writer *User) {
 	post.UpdateAt = time.Now()
 }
 
+func (post *Post) FindById(id int) error {
+	s := session.Clone()
+	defer s.Close()
+
+	var result Post
+	if err := s.DB("backend").C("posts").FindId(id).One(&result); err != nil {
+		return err
+	}
+
+	*post = result
+	return nil
+}
+
 func (post *Post) Save() error {
 	s := session.Clone()
 	defer s.Close()

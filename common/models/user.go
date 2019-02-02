@@ -25,6 +25,18 @@ func (u *User) FindByUsername(username string) error {
 	return nil
 }
 
+func (u *User) FindById(id bson.ObjectId) error {
+	s := session.Clone()
+	defer s.Close()
+	var result User
+	err := s.DB("backend").C("users").FindId(id).One(&result)
+	if err != nil {
+		return err
+	}
+	*u = result
+	return nil
+}
+
 func (u User) Save() error {
 	s := session.Clone()
 	defer s.Close()

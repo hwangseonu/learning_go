@@ -24,8 +24,9 @@ func (c *AuthController) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 		c.signIn(res, req)
 	} else if regexp.MustCompile("^/auth/refresh$").Match(path) && req.Method == "GET" {
 		c.refresh(res, req)
+	} else {
+		functions.Response(res, req, 404, []byte(`{"message": "404 page not found"}`))
 	}
-	functions.Response(res, req, 404, []byte(`{"message": "404 page not found"}`))
 }
 
 func (c AuthController) signIn(res http.ResponseWriter, req *http.Request) {

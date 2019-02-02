@@ -6,6 +6,8 @@ import (
 	"github.com/hwangseonu/goBackend/common/jwt"
 	"github.com/hwangseonu/goBackend/common/models"
 	"github.com/hwangseonu/goBackend/posts/requests"
+	"github.com/hwangseonu/goBackend/posts/responses"
+	userRes"github.com/hwangseonu/goBackend/users/responses"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -28,8 +30,9 @@ func (c *PostController) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 			return
 		}
 		c.getPost(res, req, id)
+	} else {
+		functions.Response(res, req, 404, []byte(`{"message": "404 page not found"}`))
 	}
-	functions.Response(res, req, 404, []byte(`{"message": "404 page not found"}`))
 }
 
 func (c PostController) createPost(res http.ResponseWriter, req *http.Request) {
@@ -63,5 +66,27 @@ func (c PostController) createPost(res http.ResponseWriter, req *http.Request) {
 }
 
 func (c PostController) getPost(res http.ResponseWriter, req *http.Request, id int) {
-	functions.Response(res, req, 200, []byte(`{"message": "`+strconv.Itoa(id)+`"}`))
+	post := new(models.Post)
+	if err := post.FindById(id); err != nil {
+		functions.Response(res, req, 404, []byte(`{"message": "cannot find post by id"}`))
+		return
+	}
+
+	response := responses.PostResponses{
+		Id: post.Id,
+		Title: post.Title,
+		Content: post.Content,
+		CreateAt: post.CreateAt,
+		UpdateAt: post.UpdateAt,
+	}
+
+	user := new(models.User)
+	if err := user.FindById(post.Writer); err != nil {
+		response.Writer = userRes.GetUserResponse{}
+	} else {
+		response.Writer = userRes.GetUserResponse{Username: user.Username, Nickname: user.Nickname, Email: user.Email}
+	}
+
+	b, _ := json.MarshalIndent(response, "", "  ")
+	functions.Response(res, req, 200, b)
 }

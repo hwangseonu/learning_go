@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"context"
 	"encoding/json"
 	"github.com/hwangseonu/goBackend/common/functions"
 	"github.com/hwangseonu/goBackend/common/jwt"
@@ -24,8 +23,9 @@ func (c *UserController) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 		c.signUp(res, req)
 	} else if regexp.MustCompile("^/users$").Match(path) && req.Method == "GET" {
 		c.getUserData(res, req)
+	} else {
+		functions.Response(res, req, 404, []byte(`{"message": "404 page not found"}`))
 	}
-	functions.Response(res, req, 404, []byte(`{"message": "404 page not found"}`))
 }
 
 func (c UserController) signUp(res http.ResponseWriter, req *http.Request) {
@@ -70,8 +70,6 @@ func (c UserController) getUserData(res http.ResponseWriter, req *http.Request) 
 	response := responses.GetUserResponse{Username: user.Username, Nickname: user.Nickname, Email: user.Email}
 	b, _ := json.MarshalIndent(response, "", "  ")
 
-	*req = *req.WithContext(context.WithValue(req.Context(), "statusCode", 200))
-	res.WriteHeader(200)
-	res.Write(b)
+	functions.Response(res, req, 200, b)
 	return
 }
