@@ -1,0 +1,10 @@
+PATCH http://localhost:5000/posts/5
+Authorization: Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NDkxMTk0MzcsImlhdCI6MTU0OTExNTgzNywibmJmIjoxNTQ5MTE1ODM3LCJzdWIiOiJhY2Nlc3MiLCJpZGVudGl0eSI6InRlc3QifQ.Rp_nohAEDhJ5Qf0Y4qnLqiDKFIYTawO2jsFbHvsHkLuOR1eKuvSt0Wue6B_HVr4Z5cuTK2O40GX5vkHRGWySAg
+Content-Type: application/json
+
+{
+  "title": "test1234",
+  "content": "test"
+}
+
+###

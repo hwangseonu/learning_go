@@ -48,6 +48,7 @@ func (post *Post) Save() error {
 	s := session.Clone()
 	defer s.Close()
 
+	post.UpdateAt = time.Now()
 	_, err := s.DB("backend").C("posts").Upsert(bson.M{"_id": post.Id}, post)
 	return err
 }

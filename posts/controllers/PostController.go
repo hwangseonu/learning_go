@@ -37,6 +37,13 @@ func (c *PostController) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 			return
 		}
 		c.deletePost(res, req, id)
+	} else if regexp.MustCompile(`^/posts/\d+$`).Match(path) && req.Method == "PATCH" {
+		id, err := strconv.Atoi(strings.TrimPrefix(req.URL.Path, "/posts/"))
+		if err != nil {
+			functions.Response(res, req, 400, []byte(`{"message": "post is is integer"}`))
+			return
+		}
+		c.updatePost(res, req, id)
 	} else {
 		functions.Response(res, req, 404, []byte(`{"message": "404 page not found"}`))
 	}
@@ -67,7 +74,15 @@ func (c PostController) createPost(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	b, _ := json.MarshalIndent(post, "", "  ")
+	response := responses.PostResponses{
+		Id: post.Id,
+		Title: post.Title,
+		Content: post.Content,
+		CreateAt: post.CreateAt,
+		UpdateAt: post.UpdateAt,
+		Writer: userRes.GetUserResponse{Username: user.Username, Nickname: user.Nickname, Email: user.Email},
+	}
+	b, _ := json.MarshalIndent(response, "", "  ")
 	functions.Response(res, req, 201, b)
 	return
 }
@@ -122,4 +137,48 @@ func (c PostController) deletePost(res http.ResponseWriter, req *http.Request, i
 		return
 	}
 	functions.Response(res, req, 200, []byte(`{}`))
+}
+
+func (c PostController) updatePost(res http.ResponseWriter, req *http.Request, id int) {
+	claims := jwt.AuthRequire(res, req, "access")
+	if claims == nil {
+		return
+	}
+	user := new(models.User)
+	user.FindByUsername(claims.Identity)
+
+	post := new(models.Post)
+	if err := post.FindById(id); err != nil {
+		functions.Response(res, req, 404, []byte(`{"message": "cannot find post by id"}`))
+		return
+	}
+
+	if post.Writer.Hex() != user.Id.Hex() {
+		functions.Response(res, req, 403, []byte(`{"message": "this post is not your own"}`))
+		return
+	}
+
+	var request requests.UpdatePostRequest
+	if err := functions.Request(res, req, &request); err != nil {
+		return
+	}
+
+	post.Title = request.Title
+	post.Content = request.Content
+	if err := post.Save(); err != nil {
+		functions.Response(res, req, 500, []byte(`{"message": "`+err.Error()+`"}`))
+		return
+	}
+
+	response := responses.PostResponses{
+		Id: post.Id,
+		Title: post.Title,
+		Content: post.Content,
+		CreateAt: post.CreateAt,
+		UpdateAt: post.UpdateAt,
+		Writer: userRes.GetUserResponse{Username: user.Username, Nickname: user.Nickname, Email: user.Email},
+	}
+
+	b, _ := json.MarshalIndent(response, "", "  ")
+	functions.Response(res, req, 200, b)
 }
