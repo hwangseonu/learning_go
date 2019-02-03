@@ -7,7 +7,6 @@ import (
 	"github.com/hwangseonu/goBackend/users/controllers"
 	"github.com/hwangseonu/goBackend/users/responses"
 	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -15,8 +14,8 @@ import (
 	"testing"
 )
 
-func SignUp(t *testing.T) {
-	req, err := http.NewRequest("POST", "/users", strings.NewReader(`{"username": "test", "password": "test1234", "nickname": "test", "email": "test@test"}`))
+func SignUp(username string, t *testing.T) {
+	req, err := http.NewRequest("POST", "/users", strings.NewReader(`{"username": "`+username+`", "password": "test1234", "nickname": "test", "email": "test@test"}`))
 	req.Header.Add("Content-Type", "application/json")
 
 	if err != nil {
@@ -37,7 +36,7 @@ func RemoveTestUser(t *testing.T) {
 	if s, err := mgo.Dial("mongodb://localhost:27017"); err != nil {
 		t.Fatal(err)
 	} else {
-		if err = s.DB("backend").C("users").Remove(bson.M{"username": "test"}); err != nil {
+		if err = s.DB("backend").C("users").DropCollection(); err != nil {
 			t.Fatal(err)
 			s.Close()
 		}
@@ -59,7 +58,7 @@ func JwtCheck(tokenString string, t *testing.T) {
 }
 
 func TestSignUp(t *testing.T) {
-	SignUp(t)
+	SignUp("test", t)
 
 	//Test user conflict
 	req, err := http.NewRequest("POST", "/users", strings.NewReader(`{"username": "test", "password": "test1234", "nickname": "test", "email": "test@test"}`))
@@ -81,7 +80,7 @@ func TestSignUp(t *testing.T) {
 }
 
 func TestSignIn(t *testing.T) {
-	SignUp(t)
+	SignUp("test", t)
 
 	req, err := http.NewRequest("POST", "/auth", strings.NewReader(`{"username": "test", "password": "test1234"}`))
 	req.Header.Add("Content-Type", "application/json")
@@ -134,7 +133,7 @@ func TestGetUser(t *testing.T) {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusUnprocessableEntity)
 	}
 
-	SignUp(t)
+	SignUp("test", t)
 
 	//Check ok
 	req, err = http.NewRequest("GET", "/users", nil)
