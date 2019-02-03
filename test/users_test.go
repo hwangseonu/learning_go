@@ -123,3 +123,60 @@ func TestSignIn(t *testing.T) {
 		}
 	}
 }
+
+func TestGetUser(t *testing.T) {
+	access, err := jwt2.GenerateToken("access", "test")
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	req, err := http.NewRequest("GET", "/users", nil)
+	req.Header.Add("Authorization", "Bearer " + access)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	handler := new(controllers.UserController)
+
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusUnprocessableEntity {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusUnprocessableEntity)
+	}
+
+	req, err = http.NewRequest("POST", "/users", strings.NewReader(`{"username": "test", "password": "test1234", "nickname": "test", "email": "test@test"}`))
+	req.Header.Add("Content-Type", "application/json")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr = httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+
+	req, err = http.NewRequest("GET", "/users", nil)
+	req.Header.Add("Authorization", "Bearer " + access)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr = httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
+	}
+
+	if s, err := mgo.Dial("mongodb://localhost:27017"); err != nil {
+		t.Error(err)
+	} else {
+		if err = s.DB("backend").C("users").Remove(bson.M{"username": "test"}); err != nil {
+			t.Error(err)
+			s.Close()
+		}
+	}
+}
