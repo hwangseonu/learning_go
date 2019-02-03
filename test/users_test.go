@@ -1,11 +1,16 @@
 package test
 
 import (
+	"encoding/json"
+	"github.com/dgrijalva/jwt-go"
+	jwt2 "github.com/hwangseonu/goBackend/common/jwt"
 	"github.com/hwangseonu/goBackend/users/controllers"
+	"github.com/hwangseonu/goBackend/users/responses"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 )
@@ -78,6 +83,35 @@ func TestSignIn(t *testing.T) {
 
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
+	}
+
+	res := responses.SignInResponse{}
+	if err = json.Unmarshal(rr.Body.Bytes(), &res); err != nil {
+		t.Error(err)
+	} else {
+		token, err := jwt.ParseWithClaims(res.Access, &jwt2.CustomClaims{}, func(token *jwt.Token) (i interface{}, e error) {
+			return []byte(os.Getenv("JWT_SECRET")), nil
+		})
+		if err != nil {
+			t.Error(err)
+		}
+		claims := token.Claims.(*jwt2.CustomClaims)
+
+		if claims.Valid() != nil {
+			t.Error("jwt is invalid")
+		}
+
+		token, err = jwt.ParseWithClaims(res.Refresh, &jwt2.CustomClaims{}, func(token *jwt.Token) (i interface{}, e error) {
+			return []byte(os.Getenv("JWT_SECRET")), nil
+		})
+		if err != nil {
+			t.Error(err)
+		}
+		claims = token.Claims.(*jwt2.CustomClaims)
+
+		if claims.Valid() != nil {
+			t.Error("jwt is invalid")
+		}
 	}
 
 	if s, err := mgo.Dial("mongodb://localhost:27017"); err != nil {
