@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type PostResponses struct {
+type PostResponse struct {
 	Id       int                       `json:"id" bson:"_id"`
 	Title    string                    `json:"title"`
 	Content  string                    `json:"content"`

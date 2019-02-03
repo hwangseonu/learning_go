@@ -74,7 +74,7 @@ func (c PostController) createPost(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	response := responses.PostResponses{
+	response := responses.PostResponse{
 		Id: post.Id,
 		Title: post.Title,
 		Content: post.Content,
@@ -94,7 +94,7 @@ func (c PostController) getPost(res http.ResponseWriter, req *http.Request, id i
 		return
 	}
 
-	response := responses.PostResponses{
+	response := responses.PostResponse{
 		Id: post.Id,
 		Title: post.Title,
 		Content: post.Content,
@@ -170,7 +170,7 @@ func (c PostController) updatePost(res http.ResponseWriter, req *http.Request, i
 		return
 	}
 
-	response := responses.PostResponses{
+	response := responses.PostResponse{
 		Id: post.Id,
 		Title: post.Title,
 		Content: post.Content,
