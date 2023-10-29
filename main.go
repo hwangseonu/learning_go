@@ -1,27 +1,24 @@
 package main
 
 import (
-	"github.com/hwangseonu/goBackend/common/middlewares"
-	posts "github.com/hwangseonu/goBackend/posts/controllers"
-	users "github.com/hwangseonu/goBackend/users/controllers"
+	"log"
+	"net"
 	"net/http"
 )
 
-const port = ":5000"
-
 func main() {
-	before := middlewares.ChainBeforeMiddlewares()
-	after := middlewares.ChainAfterMiddlewares(middlewares.LoggerMiddleware)
+	mux := http.NewServeMux()
+	host := []byte{127, 0, 0, 1}
+	port := 8080
+	addr := net.TCPAddr{IP: host, Port: port, Zone: ""}
 
-	http.HandleFunc("/auth", before(after(new(users.AuthController))))
-	http.HandleFunc("/auth/", before(after(new(users.AuthController))))
-	http.HandleFunc("/users", before(after(new(users.UserController))))
-	http.Handle("/posts", before(after(new(posts.PostController))))
-	http.Handle("/posts/", before(after(new(posts.PostController))))
+	users := NewUserAPI()
+	logger := http.HandlerFunc(logHandler)
 
-	println("server is running on port " + port)
-	err := http.ListenAndServe(port, nil)
-	if err != nil {
-		panic(err)
+	mux.Handle("/users", HandlerChain{logger, users})
+
+	log.Printf("Listening on http://%v\n", addr.String())
+	if err := http.ListenAndServe(addr.String(), mux); err != nil {
+		log.Fatalln(err)
 	}
 }

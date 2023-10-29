@@ -1,21 +1,9 @@
-# goBackend
-go로 만든 backend  
-웹 백엔드에 대한 이해를 바탕으로 백엔드 코딩을 도와주는 다른 라이브러리 없이 go언어에 내장된 http모듈만으로 CRUD가 존재하는 간단한 rest api를 구현한다.  
+# learning go
 
-## Technical Stack
+go로 간단한 CRUD가 있는 api를 만들어보며 익히기
 
-### Language
+## 목표
 
-- Go(11)
-
-### Framework
-
-- 그런거없다
-
-### Library
-
-- gopkg.in/mgo.v2
-
-### Database
-
-- MongoDB
+- only builtin library만 사용
+- user crud 구현
+- post crud 구현
